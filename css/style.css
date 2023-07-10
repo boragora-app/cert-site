@@ -9294,7 +9294,7 @@ textarea.form-control {
       -webkit-transition: all 0.3s ease;
       -ms-transition: all 0.3s ease;
       transition: all 0.3s ease;
-      background: #38d39f;
+      background: #000;
       border: 1px solid transparent; }
       .ftco-section .nav-pills .nav-link.active:after, .ftco-section .nav-pills .nav-link:hover:after {
         opacity: 1; }
@@ -9739,6 +9739,10 @@ textarea.form-control {
 .descricao{
   padding: 25px;
   display: flex;
+  /* border: 1px solid rgba(0, 0, 0, 0.1); */
+display: block;
+position: relative;
+  
 }
 .contact-email {
   /* box-shadow: 0 0 30px rgba(238, 238, 238, 0.6); */
