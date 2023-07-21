@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-site
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cert-site
+  template:
+    metadata:
+      labels:
+        app: cert-site
+    spec:
+      containers:
+      - name: cert-site
+        image: registry.rcaldas.com/boragora/cert-site:1.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+          limits:
+            memory: "32Mi"
+            cpu: "30m"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: owner
+                operator: In
+                values:
+                - crco
+            weight: 8
+          - preference:
+              matchExpressions:
+              - key: env
+                operator: In
+                values:
+                - dev
+            weight: 100
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cert-site
+  namespace: dev
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: cert-site
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cert-site
+  namespace: dev
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
+    nginx.ingress.kubernetes.io/limit-rpm: "30"
+    nginx.ingress.kubernetes.io/proxy-body-size: 2m
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "10"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      client_body_timeout 10s;
+      client_header_timeout 10s;
+spec:
+  ingressClassName: "nginx"
+  tls:
+    - hosts:
+      - cert.boragora.app
+      secretName: cert-site-cert
+  rules:
+    - host: cert.boragora.app
+      http:
+        paths:
+        - pathType: Prefix
+          path: /
+          backend:
+            service:
+              name: cert-site
+              port:
+                number: 80
